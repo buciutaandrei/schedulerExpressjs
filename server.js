@@ -33,7 +33,12 @@ MongoClient.connect(
         });
     });
 
-    app.post("/:id", (req, res) => {});
+    app.post("/:id", (req, res) => {
+      console.log(req);
+      db.collection(req.params.id)
+        .save(req.body)
+        .then(data => res.send(data));
+    });
 
     app.patch("/:id", (req, res) => {});
 
