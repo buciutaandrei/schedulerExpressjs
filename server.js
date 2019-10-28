@@ -34,7 +34,6 @@ MongoClient.connect(
     });
 
     app.post("/:id", (req, res) => {
-      console.log(req);
       db.collection(req.params.id)
         .save(req.body)
         .then(data => res.send(data));
@@ -42,7 +41,11 @@ MongoClient.connect(
 
     app.patch("/:id", (req, res) => {});
 
-    app.delete("/:id", (req, res) => {});
+    app.delete("/:id", (req, res) => {
+      db.collection(req.params.id)
+        .deleteOne({ index: req.body.id })
+        .then(data => res.send(data));
+    });
 
     app.listen(3001, () => console.log("server started"));
   }
