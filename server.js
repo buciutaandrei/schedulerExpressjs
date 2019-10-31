@@ -34,8 +34,9 @@ MongoClient.connect(
     });
 
     app.post("/:id", (req, res) => {
-      db.collection(req.params.id)
-        .save(req.body)
+      let date = req.params.id
+      db.collection(date)
+        .insertOne(req.body)
         .then(data => res.send(data));
     });
 
