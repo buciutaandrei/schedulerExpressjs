@@ -31,7 +31,7 @@ router.post("/register", (req, res) => {
             if (err) throw err;
             newUser.password = hash;
             db.collection("users")
-              .save(newUser)
+              .insertOne(newUser)
               .then(user => res.json(user))
               .catch(err => console.log(err));
           });
