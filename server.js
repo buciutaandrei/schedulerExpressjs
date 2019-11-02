@@ -1,18 +1,21 @@
-const express = require("express");
+const app = require("express")();
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
 const cors = require("cors");
 const passport = require("passport");
 const users = require("./api/users");
 const bodyParser = require("body-parser");
 const MongoClient = require("mongodb").MongoClient;
-const app = express();
+const moment = require("moment");
+
 require("dotenv").config();
-app.use(cors());
 app.use(
   bodyParser.urlencoded({
     extended: false
   })
 );
 app.use(bodyParser.json());
+app.use(cors());
 app.use(passport.initialize());
 require("./config/passport")(passport);
 app.use("/api/users", users);
@@ -29,9 +32,51 @@ MongoClient.connect(
 
     app.get("/", (req, res) => {});
 
-    app.post("/logging", (req, res) => {
-      console.log(req.body);
+    const connections = [];
+
+    io.on("connection", socket => {
+      console.log("user connected to socket ", socket.id);
+      connections.push(socket);
+      socket.on("disconnect", () => {
+        console.log("disconnected");
+      });
+
+      socket.on("fetchItems", collection => {
+        db.collection(collection)
+          .find({})
+          .toArray((err, result) => {
+            io.sockets.emit("dataFetch", result);
+          });
+      });
+
+      socket.on("loaded", () => {
+        io.sockets.emit("loaded");
+      });
+
+      socket.on("fetchEditItems", collection => {
+        db.collection(collection)
+          .find({})
+          .toArray((err, result) => {
+            io.sockets.emit("dataFetchEdit", result);
+          });
+      });
+
+      socket.on("addItems", input => {
+        let date = moment(input.selectedDate).format("DDMMY");
+        db.collection(date)
+          .insertOne(input)
+          .then(data => io.sockets.emit("refresh", date));
+      });
+
+      socket.on("deleteItems", input => {
+        let date = moment(input.selectedDate).format("DDMMY");
+        db.collection(date)
+          .deleteOne({ index: input.id })
+          .then(data => io.sockets.emit("refresh", date));
+      });
     });
+
+    app.post("/logging", (req, res) => {});
 
     app.get("/database/:id", (req, res) => {
       db.collection(req.params.id)
@@ -48,14 +93,14 @@ MongoClient.connect(
         .then(data => res.send(data));
     });
 
-    app.patch("/database/:id", (req, res) => {});
-
     app.delete("/database/:id", (req, res) => {
       db.collection(req.params.id)
         .deleteOne({ index: req.body.id })
         .then(data => res.send(data));
     });
 
-    app.listen(3001, () => console.log("server started"));
+    server.listen(3001, () => {
+      console.log("server started");
+    });
   }
 );
