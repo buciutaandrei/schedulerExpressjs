@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 const cors = require("cors");
@@ -7,6 +8,7 @@ const users = require("./api/users");
 const bodyParser = require("body-parser");
 const MongoClient = require("mongodb").MongoClient;
 const moment = require("moment");
+const path = require("path");
 
 require("dotenv").config();
 app.use(
@@ -19,6 +21,7 @@ app.use(cors());
 app.use(passport.initialize());
 require("./config/passport")(passport);
 app.use("/api/users", users);
+app.use(express.static(path.join(__dirname + "/build")));
 
 MongoClient.connect(
   "mongodb://localhost/proiect",
@@ -30,7 +33,11 @@ MongoClient.connect(
     db.on("error", error => console.error(error));
     db.once("open", () => console.log("connected to database"));
 
-    app.get("/", (req, res) => {});
+    console.log(path.join(__dirname + "/build/index.html"));
+
+    app.get("/", (req, res) => {
+      res.sendFile(path.join(__dirname + "/build/index.html"));
+    });
 
     const connections = [];
 
