@@ -24,7 +24,7 @@ app.use("/api/users", users);
 app.use(express.static(path.join(__dirname + "/build")));
 
 MongoClient.connect(
-  "mongodb://localhost/proiect",
+  process.env.MONGODB_URI || "mongodb://localhost/proiect",
   { useUnifiedTopology: true },
   (err, client) => {
     if (err) return console.log(err);
@@ -106,7 +106,9 @@ MongoClient.connect(
         .then(data => res.send(data));
     });
 
-    server.listen(3001, () => {
+    let port = process.env.port || 3001;
+
+    server.listen(port, () => {
       console.log("server started");
     });
   }
